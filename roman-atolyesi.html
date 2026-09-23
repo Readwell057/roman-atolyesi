@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Roman Atölyesi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Lora:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-dk:#211A12; --ink-dk-2:#2A2118; --oak:#372B1E;
+    --paper:#F3ECDD; --paper-2:#EAE0C9; --card:#FBF7EC;
+    --ink:#2B2116; --ink-soft:#7A6A50; --line:#DDCFAE;
+    --accent:#B6803F; --accent-2:#C99751; --accent-soft:#F1E3C6; --accent-ink:#5A3D14;
+    --cream:#F3ECDD;
+    --ok:#4C6B4F; --warn:#9C4A3A;
+    --radius:14px; --heading-font:'Fraunces',serif;
+  }
+  /* Tema paletleri artık JS tarafından uygulanıyor (bkz. PALETTES) — varsayılan açık/Amber tema yukarıdaki :root değerleridir. Sistemin koyu mod ayarına göre otomatik geçiş YAPILMAZ; kullanıcı Ayarlar'dan seçmediği sürece uygulama her zaman açık temada kalır. */
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; font-size:15px; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); display:flex; min-height:100%;}
+  h1,h2,h3,.serif{font-family:var(--heading-font); font-optical-sizing:auto;}
+  button{font-family:inherit; cursor:pointer;}
+  textarea,input,select{font-family:inherit; color:inherit;}
+
+  #sidebar{width:222px; flex-shrink:0; background:var(--ink-dk); background-image:linear-gradient(180deg, var(--ink-dk-2), var(--ink-dk)); border-right:1px solid var(--oak); display:flex; flex-direction:column; padding:20px 13px; gap:1px; overflow-y:auto;}
+  #sidebar .brand{font-family:var(--heading-font); font-weight:600; font-size:20px; color:#F3ECDD; padding:2px 10px 6px;}
+  #sidebar .brand span{color:var(--accent-2);}
+  #sidebar .brand-rule{height:1px; background:linear-gradient(90deg, var(--oak), transparent); margin:0 8px 14px;}
+  .nav-btn{display:flex; align-items:center; gap:10px; background:none; border:none; text-align:left; padding:9px 12px; border-radius:9px; color:#B7A98A; font-size:13px; font-weight:500; position:relative;}
+  .nav-btn:hover{background:rgba(255,255,255,.05); color:#EDE3D0;}
+  .nav-btn.active{background:rgba(217,164,92,.16); color:#E7BC80; font-weight:600;}
+  .nav-btn.active::before{content:''; position:absolute; left:0; top:7px; bottom:7px; width:3px; border-radius:3px; background:var(--accent-2);}
+  .nav-btn .ic{font-size:14px; width:17px; text-align:center;}
+
+  #main{flex:1; min-width:0; overflow-y:auto; height:100vh; height:100dvh;}
+  .view{padding:28px 34px; max-width:1040px; margin:0 auto; display:none;}
+  .view.active{display:block;}
+  .view-head{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:18px; gap:16px; flex-wrap:wrap;}
+  .view-head h2{margin:0 0 4px; font-size:25px; font-weight:600; letter-spacing:-.2px;}
+  .view-head p{margin:0; color:var(--ink-soft); font-size:13.5px;}
+
+  .btn{background:var(--accent); color:#FFFBF2; border:none; padding:10px 17px; border-radius:9px; font-size:13.5px; font-weight:600; white-space:nowrap; box-shadow:0 1px 2px rgba(90,61,20,.25); transition:background .15s, transform .1s;}
+  .btn:hover{background:var(--accent-2);}
+  .btn:active{transform:translateY(1px);}
+  .btn.ghost{background:transparent; color:var(--accent-ink); border:1px solid var(--line); box-shadow:none;}
+  .btn.ghost:hover{background:var(--accent-soft); border-color:var(--accent-2);}
+  .btn.small{padding:6px 11px; font-size:12.5px;}
+  .btn.warn{background:var(--warn);}
+  .btn:disabled{opacity:.5; cursor:not-allowed;}
+
+  .subtabs{display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap;}
+  .subtab{background:var(--card); border:1px solid var(--line); color:var(--ink-soft); padding:8px 14px; border-radius:20px; font-size:13px; font-weight:600;}
+  .subtab.active{background:var(--accent); color:#fff; border-color:var(--accent);}
+
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(232px,1fr)); gap:18px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; display:flex; flex-direction:column; gap:8px; box-shadow:0 1px 3px rgba(43,33,22,.06); transition:box-shadow .15s, transform .15s;}
+  .card[draggable=true]{cursor:grab;}
+  .card.drag-over{outline:2px dashed var(--accent); outline-offset:2px;}
+  .card:hover{box-shadow:0 6px 16px rgba(43,33,22,.1); transform:translateY(-1px);}
+  .card .thumb{width:100%; aspect-ratio:4/3; border-radius:9px; background:var(--paper-2); object-fit:cover; border:1px solid var(--line);}
+  .card .thumb.empty{display:flex; align-items:center; justify-content:center; color:var(--ink-soft); font-size:12px; text-align:center; padding:10px;}
+  .card h3{margin:2px 0 0; font-size:16px;}
+  .card .meta{font-size:11.5px; color:var(--ink-soft); font-weight:600; text-transform:uppercase; letter-spacing:.4px; opacity:.75;}
+  .card .desc{font-size:12.5px; color:var(--ink-soft); line-height:1.5; max-height:54px; overflow:hidden;}
+  .card .tagrow{display:flex; gap:5px; flex-wrap:wrap;}
+  .tag{background:var(--accent-soft); color:var(--accent-ink); font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px;}
+  .tag.chip{cursor:pointer; border:1px solid var(--line); background:var(--card);}
+  .tag.chip.active{background:var(--accent); color:#fff; border-color:var(--accent);}
+  .card .row{display:flex; gap:6px; margin-top:auto; flex-wrap:wrap;}
+  .minibar{height:6px; background:var(--paper-2); border-radius:4px; overflow:hidden;}
+  .minibar .f{height:100%; background:var(--ok); border-radius:4px;}
+
+  .empty-state{border:1.5px dashed var(--line); border-radius:var(--radius); padding:40px 20px; text-align:center; color:var(--ink-soft); font-size:14px;}
+  .empty-state .btn{margin-top:14px;}
+
+  .overlay{position:fixed; inset:0; background:rgba(20,16,10,.45); display:none; align-items:flex-start; justify-content:center; z-index:50; padding:40px 16px; overflow-y:auto;}
+  .overlay.active{display:flex;}
+  .modal{background:var(--paper); border-radius:16px; width:100%; max-width:580px; padding:26px; border:1px solid var(--line);}
+  .modal h3{margin:0 0 16px; font-size:19px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-bottom:5px;}
+  .field input[type=text], .field input[type=number], .field input[type=color], .field textarea, .field select{width:100%; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:9px 11px; font-size:14px; color:var(--ink); resize:vertical;}
+  .field textarea{min-height:64px;}
+  .field-row{display:flex; gap:10px;}
+  .field-row .field{flex:1;}
+  .modal-actions{display:flex; justify-content:space-between; margin-top:18px; gap:10px;}
+  .modal-actions .left{display:flex; gap:8px;}
+
+  .img-picker{display:flex; gap:10px; align-items:flex-start;}
+  .img-picker img{width:96px; height:96px; object-fit:cover; border-radius:9px; border:1px solid var(--line); background:var(--card);}
+  .img-picker .opts{display:flex; flex-direction:column; gap:6px;}
+  .img-picker input[type=file]{font-size:12px;}
+
+  .minirow{display:flex; gap:6px; align-items:center; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:7px 9px; font-size:12.5px; margin-bottom:6px;}
+  .minirow .x{margin-left:auto; color:var(--warn); cursor:pointer; font-weight:700;}
+  .add-inline{display:flex; gap:6px; margin-top:4px;}
+  .add-inline input, .add-inline select{flex:1; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:7px 9px; font-size:13px;}
+
+  #write-toolbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:10px; flex-wrap:wrap;}
+  #write-toolbar select{background:var(--card); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:13.5px;}
+  #write-stats{font-size:12.5px; color:var(--ink-soft);}
+  .write-layout{display:flex; gap:18px; align-items:flex-start;}
+  .write-layout .col-main{flex:1; min-width:0;}
+  .write-layout .col-side{width:230px; flex-shrink:0; display:flex; flex-direction:column; gap:14px;}
+  #editor{width:100%; min-height:56vh; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:30px; font-family:var(--heading-font); font-size:18px; line-height:1.85; color:var(--ink); resize:vertical; box-shadow:0 1px 3px rgba(43,33,22,.06);}
+  #editor:focus{outline:none; border-color:var(--accent-2); box-shadow:0 0 0 3px var(--accent-soft);}
+  .side-box{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px;}
+  .side-box h4{margin:0 0 8px; font-size:12.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--ink-soft);}
+  .note-item{background:var(--paper-2); border-radius:8px; padding:7px 9px; font-size:12px; margin-bottom:6px; position:relative;}
+  .note-item .x{position:absolute; top:5px; right:7px; color:var(--warn); cursor:pointer; font-weight:700;}
+  .scene-chip{display:inline-block; padding:5px 10px; border-radius:16px; background:var(--paper-2); border:1px solid var(--line); font-size:12px; margin:0 5px 5px 0; cursor:pointer;}
+  .scene-chip.active{background:var(--accent); color:#fff; border-color:var(--accent);}
+  .zen #sidebar{display:none;}
+  .zen .write-layout .col-side{display:none;}
+  .zen .view{max-width:760px;}
+
+  #chat-log{display:flex; flex-direction:column; gap:12px; margin-bottom:16px; max-height:50vh; overflow-y:auto; padding-right:4px;}
+  .msg{max-width:82%; padding:11px 14px; border-radius:12px; font-size:14px; line-height:1.55;}
+  .msg.user{align-self:flex-end; background:var(--accent); color:#FFFBF2; border-bottom-right-radius:3px;}
+  .msg.ai{align-self:flex-start; background:var(--card); border:1px solid var(--line); border-bottom-left-radius:3px; white-space:pre-wrap;}
+  .msg.sys{align-self:center; color:var(--ink-soft); font-size:12.5px;}
+  #chat-form{display:flex; gap:8px;}
+  #chat-input{flex:1; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:11px 13px; font-size:14px;}
+  .quick-actions{display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;}
+
+  .note{font-size:12.5px; color:var(--ink-soft); line-height:1.6; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px;}
+  .note b{color:var(--ink);}
+  .toast{position:fixed; bottom:calc(20px + env(safe-area-inset-bottom,0px)); left:50%; transform:translateX(-50%); background:var(--ink); color:var(--paper); padding:10px 18px; border-radius:20px; font-size:13px; opacity:0; pointer-events:none; transition:opacity .25s; z-index:99;}
+  .toast.show{opacity:1;}
+
+  .outline-item{border-left:2px solid var(--line); padding:2px 0 18px 18px; position:relative;}
+  .outline-item::before{content:''; position:absolute; left:-6px; top:4px; width:10px; height:10px; border-radius:50%; background:var(--accent); border:2px solid var(--paper);}
+  .outline-item h3{margin:0 0 4px; font-size:16px;}
+  .outline-item .desc{font-size:13px; color:var(--ink-soft); margin-bottom:4px;}
+  .outline-item .bridge{font-size:12px; color:var(--accent-ink); font-style:italic;}
+
+  .timeline-row{display:flex; gap:0; overflow-x:auto; padding:20px 4px 30px;}
+  .tl-node{flex-shrink:0; width:150px; text-align:center; position:relative; padding:0 10px;}
+  .tl-node::before{content:''; position:absolute; top:9px; left:0; right:0; height:2px; background:var(--line);}
+  .tl-node:first-child::before{left:50%;}
+  .tl-node:last-child::before{right:50%;}
+  .tl-dot{width:18px; height:18px; border-radius:50%; background:var(--accent); margin:0 auto 8px; position:relative; z-index:1; border:3px solid var(--paper);}
+  .tl-node .t{font-size:12.5px; font-weight:600;}
+  .tl-node .s{font-size:11px; color:var(--ink-soft);}
+
+  .arc-row{display:flex; align-items:center; gap:12px; margin-bottom:6px; font-size:12.5px;}
+  .arc-row .lbl{width:150px; flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .arc-row input[type=range]{flex:1;}
+  .arc-row .val{width:22px; text-align:right; color:var(--ink-soft);}
+
+  .relmap{position:relative; background:var(--card); border:1px solid var(--line); border-radius:14px; min-height:400px; overflow:hidden;}
+  .relmap svg{width:100%; height:400px;}
+  .relnode{position:absolute; transform:translate(-50%,-50%); text-align:center; width:90px;}
+  .relnode img{width:54px; height:54px; border-radius:50%; object-fit:cover; border:2px solid var(--accent-2); background:var(--paper-2);}
+  .relnode .nm{font-size:11.5px; font-weight:600; margin-top:4px;}
+
+  .mapwrap{position:relative; border:1px solid var(--line); border-radius:14px; overflow:hidden; background:var(--card); min-height:300px;}
+  .mapwrap img.bg{width:100%; display:block;}
+  .pin{position:absolute; transform:translate(-50%,-100%); cursor:pointer; text-align:center;}
+  .pin .dot{width:16px; height:16px; border-radius:50% 50% 50% 0; background:var(--warn); border:2px solid #fff; transform:rotate(-45deg); margin:0 auto;}
+  .pin .lbl{font-size:10.5px; font-weight:700; background:var(--ink-dk); color:#fff; padding:1px 6px; border-radius:6px; margin-top:2px; white-space:nowrap;}
+
+  .goalbar{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:16px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;}
+  .goalbar .track{flex:1; min-width:140px; height:8px; background:var(--paper-2); border-radius:6px; overflow:hidden;}
+  .goalbar .fill{height:100%; background:var(--accent); border-radius:6px; transition:width .3s;}
+  .goalbar .streak{font-size:13px; font-weight:600; color:var(--accent-ink); white-space:nowrap;}
+  .goalbar input{width:70px; background:var(--paper-2); border:1px solid var(--line); border-radius:6px; padding:5px 7px; font-size:12.5px;}
+  .quotebar{font-family:var(--heading-font); font-style:italic; font-size:14.5px; color:var(--accent-ink); background:var(--accent-soft); border-radius:10px; padding:11px 16px; margin-bottom:16px;}
+
+  table.glossary{width:100%; border-collapse:collapse;}
+  table.glossary th{text-align:left; font-size:11.5px; text-transform:uppercase; color:var(--ink-soft); padding:8px 10px; border-bottom:1px solid var(--line);}
+  table.glossary td{padding:10px; border-bottom:1px solid var(--line); font-size:13.5px; vertical-align:top;}
+  table.glossary tr:hover{background:var(--card);}
+
+  .stat-cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:22px;}
+  .stat-card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px;}
+  .stat-card .n{font-family:var(--heading-font); font-size:26px; font-weight:600;}
+  .stat-card .l{font-size:11.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.3px;}
+  .weekchart{display:flex; align-items:flex-end; gap:8px; height:140px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:20px;}
+  .weekchart .bar-wrap{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; gap:4px;}
+  .weekchart .bar{width:100%; background:var(--accent); border-radius:4px 4px 0 0; min-height:2px;}
+  .weekchart .lbl{font-size:10.5px; color:var(--ink-soft);}
+
+  .journal-entry{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:12px;}
+  .journal-entry .d{font-size:11.5px; color:var(--ink-soft); margin-bottom:6px;}
+  .journal-entry .t{font-family:var(--heading-font); font-size:15px; line-height:1.6; white-space:pre-wrap;}
+
+  .search-result{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:10px; cursor:pointer;}
+  .search-result:hover{border-color:var(--accent-2);}
+  .search-result .k{font-size:11px; color:var(--accent-ink); font-weight:700; text-transform:uppercase;}
+  .search-result .t{font-weight:600; font-size:14px;}
+  .search-result .s{font-size:12.5px; color:var(--ink-soft);}
+  mark{background:var(--accent-soft); color:var(--accent-ink); padding:0 2px; border-radius:3px;}
+
+  .book-page{max-width:640px; margin:0 auto; font-family:var(--heading-font); font-size:17px; line-height:1.9;}
+  .book-page h2{text-align:center; margin-top:50px;}
+  .book-page p{white-space:pre-wrap;}
+
+  #confetti-canvas{position:fixed; inset:0; pointer-events:none; z-index:200;}
+
+  @media print{
+    #sidebar, #write-toolbar, .view-head .btn, .goalbar, .quotebar, .toast{display:none !important;}
+    body{display:block;}
+    #main{height:auto; overflow:visible;}
+    .view{display:none !important; max-width:100%; padding:0;}
+    .view.print-target{display:block !important;}
+  }
+
+  @media (max-width:760px){
+    body{flex-direction:column;}
+    #sidebar{width:100%; flex-direction:row; overflow-x:auto; padding:10px 12px; border-right:none; border-bottom:1px solid var(--oak); gap:6px;}
+    #sidebar .brand, #sidebar .brand-rule{display:none;}
+    .nav-btn{flex-shrink:0;}
+    .nav-btn.active::before{left:8px; right:8px; top:auto; bottom:2px; width:auto; height:2px;}
+    #main{height:auto;}
+    .view{padding:20px 16px;}
+    #editor{padding:18px; font-size:16px;}
+    .write-layout{flex-direction:column;}
+    .write-layout .col-side{width:100%;}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<nav id="sidebar">
+  <div class="brand">Roman <span>Atölyesi</span></div>
+  <div class="brand-rule"></div>
+  <button class="nav-btn active" data-view="bolumler"><span class="ic">&#128214;</span>Bölümler</button>
+  <button class="nav-btn" data-view="akis"><span class="ic">&#128200;</span>Hikaye Akışı</button>
+  <button class="nav-btn" data-view="karakterler"><span class="ic">&#128100;</span>Karakterler</button>
+  <button class="nav-btn" data-view="mekanlar"><span class="ic">&#127961;</span>Mekanlar</button>
+  <button class="nav-btn" data-view="sozluk"><span class="ic">&#128213;</span>Sözlük</button>
+  <button class="nav-btn" data-view="gunluk"><span class="ic">&#128221;</span>Yazar Günlüğü</button>
+  <button class="nav-btn" data-view="arama"><span class="ic">&#128269;</span>Arama</button>
+  <button class="nav-btn" data-view="okuma"><span class="ic">&#128213;</span>Okuma Modu</button>
+  <button class="nav-btn" data-view="istatistik"><span class="ic">&#128202;</span>İstatistikler</button>
+  <button class="nav-btn" data-view="yazim"><span class="ic">&#9997;</span>Yazım Modu</button>
+  <button class="nav-btn" data-view="asistan"><span class="ic">&#10024;</span>AI Asistan</button>
+  <button class="nav-btn" data-view="ayarlar"><span class="ic">&#9881;</span>Ayarlar</button>
+</nav>
+
+<main id="main">
+
+  <!-- BÖLÜMLER -->
+  <section class="view active" id="view-bolumler">
+    <div class="view-head">
+      <div><h2>Bölümler</h2><p id="bolum-ozet">Henüz bölüm yok</p></div>
+      <button class="btn" onclick="openChapterModal()">+ Yeni Bölüm</button>
+    </div>
+    <div class="quotebar" id="daily-quote"></div>
+    <div class="goalbar">
+      <div style="font-size:13px;">Günlük hedef: <input type="number" id="goal-input" onchange="setGoal()"> kelime</div>
+      <div class="track"><div class="fill" id="goal-fill" style="width:0%"></div></div>
+      <div id="goal-today" style="font-size:12.5px; color:var(--ink-soft);"></div>
+      <div class="streak" id="goal-streak">🔥 0 gün</div>
+    </div>
+    <div class="tagrow" id="tag-filter" style="margin-bottom:14px;"></div>
+    <div class="grid" id="chapter-grid"></div>
+  </section>
+
+  <!-- HİKAYE AKIŞI -->
+  <section class="view" id="view-akis">
+    <div class="view-head"><div><h2>Hikaye Akışı</h2><p>Ana hat, zaman çizelgesi ve duygu eğrisi</p></div></div>
+    <div class="subtabs">
+      <button class="subtab active" data-akis="outline" onclick="switchAkis('outline')">Ana Hat</button>
+      <button class="subtab" data-akis="timeline" onclick="switchAkis('timeline')">Zaman Çizelgesi</button>
+      <button class="subtab" data-akis="arc" onclick="switchAkis('arc')">Duygu Eğrisi</button>
+    </div>
+    <div id="akis-outline"></div>
+    <div id="akis-timeline" style="display:none"></div>
+    <div id="akis-arc" style="display:none">
+      <select id="arc-who" onchange="renderArc()" style="margin-bottom:10px; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:7px 10px;">
+        <option value="genel">Genel (roman geneli)</option>
+      </select>
+      <svg id="arc-svg" viewBox="0 0 600 160" style="width:100%; height:160px; margin-bottom:14px;"></svg>
+      <div id="arc-controls"></div>
+    </div>
+  </section>
+
+  <!-- KARAKTERLER -->
+  <section class="view" id="view-karakterler">
+    <div class="view-head">
+      <div><h2>Karakterler</h2><p>Kişileri görselleriyle ve ilişkileriyle tut</p></div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn ghost" onclick="batchGenerateImages()">✨ Toplu Görsel Oluştur</button>
+        <button class="btn" onclick="openCharacterModal()">+ Yeni Karakter</button>
+      </div>
+    </div>
+    <div class="subtabs">
+      <button class="subtab active" data-ktab="list" onclick="switchKarTab('list')">Liste</button>
+      <button class="subtab" data-ktab="map" onclick="switchKarTab('map')">İlişki Haritası</button>
+    </div>
+    <div class="grid" id="character-grid"></div>
+    <div class="relmap" id="character-relmap" style="display:none"></div>
+  </section>
+
+  <!-- MEKANLAR -->
+  <section class="view" id="view-mekanlar">
+    <div class="view-head">
+      <div><h2>Mekanlar</h2><p>Dünyanın mekanlarını görselleştir</p></div>
+      <button class="btn" onclick="openLocationModal()">+ Yeni Mekan</button>
+    </div>
+    <div class="subtabs">
+      <button class="subtab active" data-ltab="list" onclick="switchLocTab('list')">Liste</button>
+      <button class="subtab" data-ltab="map" onclick="switchLocTab('map')">Dünya Haritası</button>
+    </div>
+    <div class="grid" id="location-grid"></div>
+    <div id="location-mapview" style="display:none">
+      <div style="margin-bottom:10px; display:flex; gap:8px; align-items:center;">
+        <input type="file" accept="image/*" id="worldmap-upload" onchange="uploadWorldMap(event)">
+        <span class="meta" style="font-size:12px;">Harita görseli yükle, sonra üzerine tıklayıp mekan pinle</span>
+      </div>
+      <div class="mapwrap" id="mapwrap"></div>
+    </div>
+  </section>
+
+  <!-- SÖZLÜK -->
+  <section class="view" id="view-sozluk">
+    <div class="view-head">
+      <div><h2>Sözlük</h2><p>Uydurduğun kelimeler ve özel terimler</p></div>
+      <button class="btn" onclick="addGlossary()">+ Terim Ekle</button>
+    </div>
+    <table class="glossary" id="glossary-table"><thead><tr><th style="width:180px">Terim</th><th>Tanım</th><th style="width:40px"></th></tr></thead><tbody id="glossary-body"></tbody></table>
+  </section>
+
+  <!-- YAZAR GÜNLÜĞÜ -->
+  <section class="view" id="view-gunluk">
+    <div class="view-head"><div><h2>Yazar Günlüğü</h2><p>Bölümlerden bağımsız serbest fikir ve ilham notların</p></div></div>
+    <div class="field"><textarea id="journal-input" placeholder="Aklına gelen bir fikir, ilham, gözlem…" style="min-height:90px;"></textarea></div>
+    <button class="btn" onclick="addJournal()" style="margin-bottom:20px;">Günlüğe Ekle</button>
+    <div id="journal-list"></div>
+  </section>
+
+  <!-- ARAMA -->
+  <section class="view" id="view-arama">
+    <div class="view-head"><div><h2>Arama</h2><p>Bölümler, karakterler, mekanlar ve notlar içinde ara</p></div></div>
+    <div class="field"><input type="text" id="search-input" placeholder="Bir isim, kelime veya olay ara…" oninput="doSearch()"></div>
+    <div id="search-results"></div>
+  </section>
+
+  <!-- OKUMA MODU -->
+  <section class="view" id="view-okuma">
+    <div class="view-head">
+      <div><h2>Okuma Modu</h2><p>Romanını tek parça, kitap gibi oku</p></div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn ghost" onclick="printBook()">🖨️ Yazdır / PDF</button>
+        <button class="btn ghost" onclick="exportWord()">📄 Word Olarak İndir</button>
+      </div>
+    </div>
+    <div class="book-page" id="book-page"></div>
+  </section>
+
+  <!-- İSTATİSTİKLER -->
+  <section class="view" id="view-istatistik">
+    <div class="view-head"><div><h2>İstatistikler</h2><p>Yazma hızın ve ilerleme tahmini</p></div></div>
+    <div class="stat-cards" id="stat-cards"></div>
+    <h3 style="font-size:15px; margin-bottom:10px;">Son 7 Gün</h3>
+    <div class="weekchart" id="weekchart"></div>
+    <div class="field-row">
+      <div class="field"><label>Kitap Hedefi (toplam kelime)</label><input type="number" id="book-goal-input" onchange="setBookGoal()"></div>
+    </div>
+    <div class="note" id="finish-estimate"></div>
+  </section>
+
+  <!-- YAZIM MODU -->
+  <section class="view" id="view-yazim">
+    <div id="write-toolbar">
+      <select id="write-chapter-select" onchange="loadChapterIntoEditor()"></select>
+      <div style="display:flex;gap:8px;align-items:center; flex-wrap:wrap;">
+        <span id="write-stats"></span>
+        <button class="btn ghost small" id="mic-btn" onclick="toggleDictation()">🎤 Sesli Not</button>
+        <button class="btn ghost small" onclick="improveSelection()">✨ Seçili Metni Geliştir</button>
+        <button class="btn ghost small" onclick="checkReadability()">🔍 Okunabilirlik</button>
+        <button class="btn ghost small" onclick="saveVersionSnapshot()">Sürüm Kaydet</button>
+        <button class="btn ghost small" id="zen-toggle" onclick="toggleZen()">Odak Modu</button>
+      </div>
+    </div>
+    <div id="scene-bar" style="margin-bottom:12px;"></div>
+    <div class="write-layout">
+      <div class="col-main"><textarea id="editor" placeholder="Bir bölüm seç ve yazmaya başla…" oninput="onEditorInput()"></textarea></div>
+      <div class="col-side">
+        <div class="side-box">
+          <h4>Bölüm Kelime Hedefi</h4>
+          <input type="number" id="chap-goal-input" onchange="setChapGoal()" style="width:100%; background:var(--paper-2); border:1px solid var(--line); border-radius:8px; padding:7px 9px;">
+          <div class="minibar" style="margin-top:8px;"><div class="f" id="chap-goal-fill" style="width:0%"></div></div>
+        </div>
+        <div class="side-box">
+          <h4>Post-it Notlar</h4>
+          <div id="write-notes"></div>
+          <div class="add-inline"><input type="text" id="note-input" placeholder="Kısa not…"><button class="btn small" onclick="addNote()">Ekle</button></div>
+        </div>
+        <div class="side-box">
+          <h4>Sürüm Geçmişi</h4>
+          <div id="write-versions" style="font-size:12px; color:var(--ink-soft);">Henüz sürüm kaydedilmedi</div>
+        </div>
+        <div class="side-box" id="readability-box" style="display:none;">
+          <h4>Okunabilirlik Notu</h4>
+          <div id="readability-text" style="font-size:12.5px; line-height:1.5;"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI ASİSTAN -->
+  <section class="view" id="view-asistan">
+    <div class="view-head"><div><h2>AI Asistan</h2><p>Tüm romanını bağlam alarak sorularını yanıtlar</p></div></div>
+    <div class="quick-actions">
+      <button class="btn ghost small" onclick="askQuick('tutarlilik')">🔍 Tutarlılık Kontrolü</button>
+      <button class="btn ghost small" onclick="askQuick('ozet')">📋 Romanı Özetle</button>
+      <button class="btn ghost small" onclick="askQuick('oneri')">💡 Sıradaki Bölüm İçin Öneri</button>
+    </div>
+    <div id="chat-log"></div>
+    <form id="chat-form" onsubmit="sendChat(event)">
+      <input id="chat-input" type="text" placeholder="Örn: Ayşe karakteri kaç bölümde geçiyor?" autocomplete="off">
+      <button class="btn" type="submit">Gönder</button>
+    </form>
+  </section>
+
+  <!-- AYARLAR -->
+  <section class="view" id="view-ayarlar">
+    <div class="view-head"><div><h2>Ayarlar</h2><p>Gemini bağlantısı, görünüm ve yedekleme</p></div></div>
+
+    <h3 style="font-size:15px;">Gemini API</h3>
+    <div class="field"><label>Gemini API Anahtarı</label><input type="text" id="gemini-key" placeholder="AIza…"></div>
+    <div class="field-row">
+      <div class="field"><label>Metin modeli</label><input type="text" id="gemini-text-model" value="gemini-2.5-flash"></div>
+      <div class="field"><label>Görsel modeli</label><input type="text" id="gemini-image-model" value="gemini-2.5-flash-image"></div>
+    </div>
+    <div style="display:flex; gap:10px; margin:10px 0 24px;">
+      <button class="btn" onclick="saveSettings()">Kaydet</button>
+      <button class="btn ghost" onclick="testConnection()">Bağlantıyı Test Et</button>
+    </div>
+
+    <h3 style="font-size:15px;">Görünüm</h3>
+    <div class="field"><label>Renk Paleti</label>
+      <div id="palette-swatches" style="display:flex; gap:12px; flex-wrap:wrap; margin-top:4px;"></div>
+    </div>
+    <div class="field" style="max-width:260px;"><label>Yazı Tipi (yazım modu)</label>
+      <select id="theme-font" onchange="onFontChange()">
+        <option value="Fraunces">Fraunces (edebi)</option>
+        <option value="Lora">Lora (klasik)</option>
+        <option value="Inter">Inter (sade)</option>
+      </select>
+    </div>
+    <div class="note" style="margin:10px 0 24px;">Bir palete dokunduğunda hemen uygulanır ve kaydedilir — ayrıca kaydetmene gerek yok.</div>
+
+    <h3 style="font-size:15px;">Yedekleme</h3>
+    <div style="display:flex; gap:10px; margin:10px 0 8px; flex-wrap:wrap;">
+      <button class="btn" onclick="exportBackup()">⬇️ Tüm Veriyi Dışa Aktar (JSON)</button>
+      <label class="btn ghost" style="display:inline-flex; align-items:center;">⬆️ Yedekten Geri Yükle<input type="file" accept=".json" style="display:none" onchange="importBackup(event)"></label>
+    </div>
+    <div class="note" style="margin-bottom:20px;"><b>Not:</b> Tüm veri bu cihazın tarayıcı hafızasında tutuluyor. Ara sıra JSON yedeği almanı öneririz — uygulama silinirse ya da cihaz değişirse romanın kaybolmaz.</div>
+
+    <div class="note"><b>Not:</b> API anahtarın yalnızca bu cihazda tutulur, bize gönderilmez. Model isimleri Google tarafında zaman zaman değişebilir; test başarısız olursa model adını güncellemen gerekebilir.</div>
+  </section>
+
+</main>
+
+<div class="overlay" id="chapter-modal"><div class="modal">
+  <h3 id="chapter-modal-title">Yeni Bölüm</h3>
+  <input type="hidden" id="chapter-id">
+  <div class="field"><label>Başlık</label><input type="text" id="chapter-title" placeholder="Bölüm 1 — Uyanış"></div>
+  <div class="field"><label>Kısa Özet</label><textarea id="chapter-summary" placeholder="Bu bölümde ne oluyor?"></textarea></div>
+  <div class="field"><label>Geçiş Notu (bir sonraki bölüme köprü)</label><textarea id="chapter-bridge" placeholder="Bu bölüm nasıl bitiyor, sıradaki nasıl başlıyor?"></textarea></div>
+  <div class="field"><label>Etiketler (virgülle ayır)</label><input type="text" id="chapter-tags" placeholder="aksiyon, flashback, aşk"></div>
+  <div class="field"><label>Sahneler</label><div id="chapter-scenes"></div>
+    <div class="add-inline"><input type="text" id="scene-input" placeholder="Sahne başlığı…"><button class="btn small" type="button" onclick="addScene()">Ekle</button></div>
+  </div>
+  <div class="modal-actions">
+    <div class="left"><button class="btn ghost" id="chapter-delete-btn" onclick="deleteChapter()">Sil</button></div>
+    <div class="left"><button class="btn ghost" onclick="closeModal('chapter-modal')">Vazgeç</button><button class="btn" onclick="saveChapter()">Kaydet</button></div>
+  </div>
+</div></div>
+
+<div class="overlay" id="character-modal"><div class="modal">
+  <h3 id="character-modal-title">Yeni Karakter</h3>
+  <input type="hidden" id="character-id">
+  <div class="field"><label>Görsel</label>
+    <div class="img-picker"><img id="character-img-preview" src="" alt="">
+      <div class="opts"><input type="file" accept="image/*" onchange="handleImageUpload(event,'character-img-preview')">
+        <button class="btn small" type="button" onclick="generateImage('character')">✨ Gemini ile oluştur</button>
+        <span id="character-img-status" class="meta"></span></div>
+    </div>
+  </div>
+  <div class="field"><label>Ad</label><input type="text" id="character-name" placeholder="Ayşe Kara"></div>
+  <div class="field"><label>Fiziksel Özellikler</label><textarea id="character-physical" placeholder="30 yaşında, kısa siyah saçlı…"></textarea></div>
+  <div class="field"><label>Kişilik</label><textarea id="character-personality" placeholder="İçe kapanık ama kararlı…"></textarea></div>
+  <div class="field"><label>Geçmiş / Motivasyon</label><textarea id="character-backstory" placeholder="Ailesini kaybetti, intikam peşinde…"></textarea></div>
+  <div class="field"><label>İlişkiler</label>
+    <div id="character-relations"></div>
+    <div class="add-inline">
+      <select id="rel-target"></select>
+      <input type="text" id="rel-label" placeholder="kardeşi, düşmanı…">
+      <button class="btn small" type="button" onclick="addRelation()">Ekle</button>
+    </div>
+  </div>
+  <div class="modal-actions">
+    <div class="left"><button class="btn ghost" onclick="deleteCharacter()">Sil</button></div>
+    <div class="left"><button class="btn ghost" onclick="closeModal('character-modal')">Vazgeç</button><button class="btn" onclick="saveCharacter()">Kaydet</button></div>
+  </div>
+</div></div>
+
+<div class="overlay" id="location-modal"><div class="modal">
+  <h3 id="location-modal-title">Yeni Mekan</h3>
+  <input type="hidden" id="location-id">
+  <div class="field"><label>Görsel</label>
+    <div class="img-picker"><img id="location-img-preview" src="" alt="">
+      <div class="opts"><input type="file" accept="image/*" onchange="handleImageUpload(event,'location-img-preview')">
+        <button class="btn small" type="button" onclick="generateImage('location')">✨ Gemini ile oluştur</button>
+        <span id="location-img-status" class="meta"></span></div>
+    </div>
+  </div>
+  <div class="field"><label>Ad</label><input type="text" id="location-name" placeholder="Kızılkale Sarayı"></div>
+  <div class="field"><label>Açıklama</label><textarea id="location-desc" placeholder="Dağın tepesinde, taştan yapılma eski bir kale…"></textarea></div>
+  <div class="field"><label>Bu mekan hangi bölümlerde geçiyor?</label><div id="location-chapters"></div></div>
+  <div class="modal-actions">
+    <div class="left"><button class="btn ghost" onclick="deleteLocation()">Sil</button></div>
+    <div class="left"><button class="btn ghost" onclick="closeModal('location-modal')">Vazgeç</button><button class="btn" onclick="saveLocation()">Kaydet</button></div>
+  </div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DB_KEY = 'roman-atolyesi-v1';
+let state = load();
+let claudeDownloads = null;
+if(window.claude && window.claude.use){ window.claude.use('downloads').then(d=>claudeDownloads=d).catch(()=>{}); }
+
+const PALETTES = {
+  amber: { name:'Amber Parşömen', paper:'#F3ECDD', paper2:'#EAE0C9', card:'#FBF7EC', ink:'#2B2116', inkSoft:'#7A6A50', line:'#DDCFAE',
+    accent:'#B6803F', accent2:'#C99751', accentSoft:'#F1E3C6', accentInk:'#5A3D14',
+    inkDk:'#211A12', inkDk2:'#2A2118', oak:'#372B1E', ok:'#4C6B4F', warn:'#9C4A3A' },
+  zeytin: { name:'Zeytin Bahçesi', paper:'#EEF0E3', paper2:'#E3E7D2', card:'#F7F8F0', ink:'#242A1E', inkSoft:'#6E7A5C', line:'#CBD4B4',
+    accent:'#5F7A52', accent2:'#78976A', accentSoft:'#DCE6CC', accentInk:'#33421F',
+    inkDk:'#1B2016', inkDk2:'#232A1B', oak:'#33402A', ok:'#4C6B4F', warn:'#9C4A3A' },
+  lacivert: { name:'Lacivert Mürekkep', paper:'#EAEEF4', paper2:'#DCE3EE', card:'#F6F8FB', ink:'#1C2733', inkSoft:'#5C6B7E', line:'#C4D0E0',
+    accent:'#35507A', accent2:'#4A6996', accentSoft:'#D6E0EF', accentInk:'#1D3357',
+    inkDk:'#141C26', inkDk2:'#1B2531', oak:'#2A3A4E', ok:'#3F6B54', warn:'#9C4A3A' },
+  bordo: { name:'Bordo Klasik', paper:'#F5EAE6', paper2:'#EDD9D2', card:'#FBF3F0', ink:'#2E1A16', inkSoft:'#8A6459', line:'#E0C3B8',
+    accent:'#8C3A3A', accent2:'#A85454', accentSoft:'#F0D9D2', accentInk:'#5C2323',
+    inkDk:'#241512', inkDk2:'#2E1B17', oak:'#472822', ok:'#4C6B4F', warn:'#B5502F' },
+  koyu: { name:'Koyu Mod', paper:'#191410', paper2:'#1F1913', card:'#241D16', ink:'#EDE3D0', inkSoft:'#A99A7D', line:'#3B3123',
+    accent:'#D9A45C', accent2:'#E7BC80', accentSoft:'#3A2C17', accentInk:'#F2DDB8',
+    inkDk:'#0F0C08', inkDk2:'#171310', oak:'#211A12', ok:'#8CB08F', warn:'#D98F7C' }
+};
+
+const QUOTES = [
+  "Bir kitabı bitirmenin tek yolu yazmaya devam etmektir. — Anne Lamott",
+  "İlk taslağın kötü olması gerekir, yoksa ikinci taslak diye bir şey olmaz. — Stephen King (ruhu)",
+  "Her gün biraz yaz; ilham beklersen hiç yazamazsın.",
+  "Bir sayfa yaz. Sonra bir tane daha. Roman böyle bitiyor.",
+  "Kusurlu ama biten bir taslak, mükemmel ama yarım bir fikirden iyidir.",
+  "Karakterlerin seni şaşırtmıyorsa, muhtemelen onları yeterince tanımıyorsun.",
+  "Bugün yazdığın cümle, yarın düzelteceğin cümledir. Önemli olan yazmak."
+];
+
+function load(){
+  try{ const raw = localStorage.getItem(DB_KEY); if(raw) return migrate(JSON.parse(raw)); }catch(e){}
+  return blank();
+}
+function blank(){
+  return { chapters:[], characters:[], locations:[], glossary:[], journal:[], worldMap:{image:null,pins:[]}, chat:[],
+    progress:{goal:300, dayDate:todayKey(), dayStart:0, history:{}, bookGoal:0, lastGoalHitDate:null},
+    settings:{ geminiKey:'', textModel:'gemini-2.5-flash', imageModel:'gemini-2.5-flash-image', theme:{preset:'amber', font:'Fraunces'} } };
+}
+function migrate(s){
+  const b = blank();
+  s.chapters = (s.chapters||[]).map(c=>({tags:[],mood:5,notes:[],versions:[],bridge:'',scenes:[],wordGoal:0,charMood:{},...c}));
+  s.characters = (s.characters||[]).map(c=>({relations:[],...c}));
+  s.locations = (s.locations||[]).map(l=>({chapterIds:[],...l}));
+  s.glossary = s.glossary||[];
+  s.journal = s.journal||[];
+  s.worldMap = s.worldMap||{image:null,pins:[]};
+  s.chat = s.chat||[];
+  s.progress = {...b.progress, ...(s.progress||{})};
+  s.settings = {...b.settings, ...(s.settings||{}), theme:{...b.settings.theme, ...((s.settings&&s.settings.theme)||{})}};
+  return s;
+}
+function save(){ try{ localStorage.setItem(DB_KEY, JSON.stringify(state)); }catch(e){ toast('Kaydedilemedi: depolama dolu olabilir'); } }
+function uid(){ return Math.random().toString(36).slice(2,10); }
+function todayKey(){ const d=new Date(); return d.toISOString().slice(0,10); }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),2200); }
+function esc(s){ return (s||'').replace(/[&<>"]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+function chapterText(c){
+  if(c.scenes && c.scenes.length) return c.scenes.map(s=>s.text||'').join('\n\n');
+  return c.content||'';
+}
+function wordCount(txt){ return (txt||'').trim().split(/\s+/).filter(Boolean).length; }
+function chapterWordCount(c){ return wordCount(chapterText(c)); }
+function totalWords(){ return state.chapters.reduce((s,c)=>s+chapterWordCount(c),0); }
+
+document.querySelectorAll('.nav-btn').forEach(btn=>btn.addEventListener('click', ()=>switchView(btn.dataset.view)));
+function switchView(name){
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id==='view-'+name));
+  if(name==='yazim') refreshChapterSelect();
+  if(name==='akis') renderAkis();
+  if(name==='sozluk') renderGlossary();
+  if(name==='mekanlar') renderWorldMap();
+  if(name==='gunluk') renderJournal();
+  if(name==='okuma') renderBook();
+  if(name==='istatistik') renderStats();
+  if(name==='arama') document.getElementById('search-input').focus();
+}
+function openModal(id){ document.getElementById(id).classList.add('active'); }
+function closeModal(id){ document.getElementById(id).classList.remove('active'); }
+
+/* ================= BÖLÜMLER ================= */
+let draggedChapterId = null;
+function renderChapters(){
+  updateGoalBar();
+  document.getElementById('daily-quote').textContent = '“ ' + QUOTES[new Date().getDate() % QUOTES.length] + ' ”';
+  const grid = document.getElementById('chapter-grid');
+  const list = state.chapters;
+  document.getElementById('bolum-ozet').textContent = list.length ? `${list.length} bölüm · toplam ${totalWords()} kelime` : 'Henüz bölüm yok';
+  renderTagFilter();
+  const filtered = activeTagFilter ? list.filter(c=>(c.tags||[]).includes(activeTagFilter)) : list;
+  if(!list.length){
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">İlk bölümünü oluşturarak başla.<br><button class="btn" onclick="openChapterModal()">+ Yeni Bölüm</button></div>`;
+    return;
+  }
+  grid.innerHTML = filtered.map((c)=>{
+    const i = list.indexOf(c);
+    const wc = chapterWordCount(c);
+    const goalPct = c.wordGoal ? Math.min(100, Math.round(wc/c.wordGoal*100)) : null;
+    return `<div class="card" draggable="true" data-id="${c.id}"
+        ondragstart="draggedChapterId='${c.id}'; event.currentTarget.style.opacity='.4';"
+        ondragend="event.currentTarget.style.opacity='1';"
+        ondragover="event.preventDefault(); event.currentTarget.classList.add('drag-over');"
+        ondragleave="event.currentTarget.classList.remove('drag-over');"
+        ondrop="event.currentTarget.classList.remove('drag-over'); dropChapter('${c.id}');">
+      <div class="meta">Bölüm ${i+1}</div>
+      <h3>${esc(c.title||'İsimsiz Bölüm')}</h3>
+      <div class="desc">${esc(c.summary||'Özet eklenmedi')}</div>
+      <div class="tagrow">${(c.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
+      <div class="meta">${wc} kelime${c.wordGoal?' / '+c.wordGoal:''} · ${(c.notes||[]).length} not${(c.scenes||[]).length?' · '+c.scenes.length+' sahne':''}</div>
+      ${goalPct!==null?`<div class="minibar"><div class="f" style="width:${goalPct}%"></div></div>`:''}
+      <div class="row">
+        <button class="btn small ghost" onclick="openChapterModal('${c.id}')">Düzenle</button>
+        <button class="btn small" onclick="writeChapter('${c.id}')">Yaz</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function dropChapter(targetId){
+  if(!draggedChapterId || draggedChapterId===targetId) return;
+  const list = state.chapters;
+  const from = list.findIndex(c=>c.id===draggedChapterId);
+  const to = list.findIndex(c=>c.id===targetId);
+  if(from<0||to<0) return;
+  const [moved] = list.splice(from,1);
+  list.splice(to,0,moved);
+  draggedChapterId = null;
+  save(); renderChapters();
+}
+let activeTagFilter = null;
+function renderTagFilter(){
+  const all = new Set(); state.chapters.forEach(c=>(c.tags||[]).forEach(t=>all.add(t)));
+  const el = document.getElementById('tag-filter');
+  if(!all.size){ el.innerHTML=''; return; }
+  el.innerHTML = [...all].map(t=>`<span class="tag chip ${activeTagFilter===t?'active':''}" onclick="toggleTagFilter('${esc(t)}')">${esc(t)}</span>`).join('');
+}
+function toggleTagFilter(t){ activeTagFilter = activeTagFilter===t ? null : t; renderChapters(); }
+
+function openChapterModal(id){
+  document.getElementById('chapter-id').value = id||'';
+  const c = state.chapters.find(x=>x.id===id);
+  document.getElementById('chapter-modal-title').textContent = c ? 'Bölümü Düzenle' : 'Yeni Bölüm';
+  document.getElementById('chapter-title').value = c?.title||'';
+  document.getElementById('chapter-summary').value = c?.summary||'';
+  document.getElementById('chapter-bridge').value = c?.bridge||'';
+  document.getElementById('chapter-tags').value = (c?.tags||[]).join(', ');
+  document.getElementById('chapter-delete-btn').style.visibility = c ? 'visible' : 'hidden';
+  pendingScenes = JSON.parse(JSON.stringify(c?.scenes||[]));
+  renderScenesEditor();
+  openModal('chapter-modal');
+}
+let pendingScenes = [];
+function renderScenesEditor(){
+  document.getElementById('chapter-scenes').innerHTML = pendingScenes.map((s,i)=>`
+    <div class="minirow">${esc(s.title)}<span class="x" onclick="removeScene(${i})">×</span></div>`).join('') || `<div class="meta">Sahne yok — istersen bölümü sahnelere bölebilirsin.</div>`;
+}
+function addScene(){
+  const title = document.getElementById('scene-input').value.trim();
+  if(!title) return;
+  pendingScenes.push({id:uid(), title, text:''});
+  document.getElementById('scene-input').value='';
+  renderScenesEditor();
+}
+function removeScene(i){ pendingScenes.splice(i,1); renderScenesEditor(); }
+function saveChapter(){
+  const id = document.getElementById('chapter-id').value;
+  const title = document.getElementById('chapter-title').value.trim();
+  if(!title){ toast('Başlık gerekli'); return; }
+  let c = state.chapters.find(x=>x.id===id);
+  if(!c){ c = { id: uid(), content:'', order: state.chapters.length, tags:[], mood:5, notes:[], versions:[], scenes:[], wordGoal:0, charMood:{} }; state.chapters.push(c); }
+  c.title = title;
+  c.summary = document.getElementById('chapter-summary').value.trim();
+  c.bridge = document.getElementById('chapter-bridge').value.trim();
+  c.tags = document.getElementById('chapter-tags').value.split(',').map(s=>s.trim()).filter(Boolean);
+  c.scenes = pendingScenes;
+  save(); renderChapters(); closeModal('chapter-modal');
+}
+function deleteChapter(){
+  const id = document.getElementById('chapter-id').value;
+  state.chapters = state.chapters.filter(x=>x.id!==id);
+  save(); renderChapters(); closeModal('chapter-modal');
+}
+function writeChapter(id){ switchView('yazim'); document.getElementById('write-chapter-select').value=id; loadChapterIntoEditor(); }
+
+/* ================= GÜNLÜK HEDEF + KUTLAMA ================= */
+function updateGoalBar(){
+  rollDayIfNeeded();
+  document.getElementById('goal-input').value = state.progress.goal;
+  const today = totalWords() - state.progress.dayStart;
+  const pct = Math.min(100, Math.round((Math.max(0,today)/Math.max(1,state.progress.goal))*100));
+  document.getElementById('goal-fill').style.width = pct+'%';
+  document.getElementById('goal-today').textContent = `Bugün: ${Math.max(0,today)} / ${state.progress.goal} kelime`;
+  const streak = computeStreak();
+  const badge = streak>=30?'🏆':streak>=7?'🔥🔥':streak>=3?'🔥':'🔥';
+  document.getElementById('goal-streak').textContent = `${badge} ${streak} gün`;
+  if(today >= state.progress.goal && state.progress.lastGoalHitDate !== todayKey()){
+    state.progress.lastGoalHitDate = todayKey(); save();
+    fireConfetti();
+    toast('Günlük hedefe ulaştın! 🎉');
+  }
+}
+function rollDayIfNeeded(){
+  const tk = todayKey();
+  if(state.progress.dayDate !== tk){
+    if(state.progress.dayDate){ state.progress.history[state.progress.dayDate] = Math.max(0, totalWords()-state.progress.dayStart); }
+    state.progress.dayDate = tk; state.progress.dayStart = totalWords();
+    save();
+  }
+}
+function computeStreak(){
+  const h = state.progress.history; let streak=0; let d = new Date();
+  const todayWords = Math.max(0, totalWords()-state.progress.dayStart);
+  if(todayWords >= state.progress.goal){ streak=1; } else { d.setDate(d.getDate()-1); }
+  for(;;){
+    const k = d.toISOString().slice(0,10);
+    if((h[k]||0) >= state.progress.goal){ streak++; d.setDate(d.getDate()-1); } else break;
+  }
+  return streak;
+}
+function setGoal(){ state.progress.goal = Math.max(50, parseInt(document.getElementById('goal-input').value)||300); save(); updateGoalBar(); }
+function fireConfetti(){
+  const canvas = document.getElementById('confetti-canvas');
+  canvas.width = innerWidth; canvas.height = innerHeight;
+  const ctx = canvas.getContext('2d');
+  const colors = ['#B6803F','#C99751','#4C6B4F','#9C4A3A','#E7BC80'];
+  let parts = Array.from({length:120}, ()=>({
+    x: Math.random()*canvas.width, y: -20-Math.random()*canvas.height*0.3,
+    vy: 2+Math.random()*3, vx: -1+Math.random()*2, r: 3+Math.random()*4,
+    c: colors[Math.floor(Math.random()*colors.length)], rot: Math.random()*360
+  }));
+  let frames = 0;
+  function tick(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    parts.forEach(p=>{
+      p.y += p.vy; p.x += p.vx; p.rot += 6;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle = p.c; ctx.fillRect(-p.r,-p.r,p.r*2,p.r*2); ctx.restore();
+    });
+    frames++;
+    if(frames < 140) requestAnimationFrame(tick); else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  tick();
+}
+
+/* ================= HİKAYE AKIŞI ================= */
+function switchAkis(tab){
+  document.querySelectorAll('[data-akis]').forEach(b=>b.classList.toggle('active', b.dataset.akis===tab));
+  ['outline','timeline','arc'].forEach(t=>document.getElementById('akis-'+t).style.display = t===tab?'block':'none');
+}
+function renderAkis(){
+  const oc = document.getElementById('akis-outline');
+  oc.innerHTML = state.chapters.length ? state.chapters.map((c,i)=>`
+    <div class="outline-item"><h3>Bölüm ${i+1} — ${esc(c.title)}</h3>
+      <div class="desc">${esc(c.summary||'Özet yok')}</div>
+      ${(c.scenes||[]).length?`<div class="desc">Sahneler: ${c.scenes.map(s=>esc(s.title)).join(' · ')}</div>`:''}
+      ${c.bridge?`<div class="bridge">↳ ${esc(c.bridge)}</div>`:''}
+    </div>`).join('') : `<div class="empty-state">Henüz bölüm yok.</div>`;
+
+  const tc = document.getElementById('akis-timeline');
+  tc.innerHTML = state.chapters.length ? `<div class="timeline-row">${state.chapters.map((c,i)=>`
+    <div class="tl-node"><div class="tl-dot"></div><div class="t">${esc(c.title)}</div><div class="s">Bölüm ${i+1}</div></div>`).join('')}</div>`
+    : `<div class="empty-state">Henüz bölüm yok.</div>`;
+
+  const whoSel = document.getElementById('arc-who');
+  whoSel.innerHTML = '<option value="genel">Genel (roman geneli)</option>' + state.characters.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  renderArc();
+}
+function renderArc(){
+  const controls = document.getElementById('arc-controls');
+  const who = document.getElementById('arc-who').value;
+  if(!state.chapters.length){ controls.innerHTML=''; document.getElementById('arc-svg').innerHTML=''; return; }
+  controls.innerHTML = state.chapters.map((c)=>{
+    const val = who==='genel' ? (c.mood||5) : ((c.charMood&&c.charMood[who])||5);
+    return `<div class="arc-row"><span class="lbl">${esc(c.title)}</span>
+      <input type="range" min="1" max="10" value="${val}" oninput="setMood('${c.id}', this.value, '${who}')">
+      <span class="val" id="mood-val-${c.id}">${val}</span>
+    </div>`;
+  }).join('');
+  drawArc();
+}
+function setMood(id, val, who){
+  const c = state.chapters.find(x=>x.id===id); if(!c) return;
+  val = parseInt(val);
+  if(who==='genel'){ c.mood = val; } else { c.charMood = c.charMood||{}; c.charMood[who] = val; }
+  document.getElementById('mood-val-'+id).textContent = val;
+  save(); drawArc();
+}
+function drawArc(){
+  const svg = document.getElementById('arc-svg');
+  const who = document.getElementById('arc-who').value;
+  const n = state.chapters.length; if(!n){ svg.innerHTML=''; return; }
+  const W=600,H=160,pad=20;
+  const pts = state.chapters.map((c,i)=>{
+    const x = n===1 ? W/2 : pad + i*((W-2*pad)/(n-1));
+    const val = who==='genel' ? (c.mood||5) : ((c.charMood&&c.charMood[who])||5);
+    const y = H-pad - (val-1)/9*(H-2*pad);
+    return [x,y];
+  });
+  const dots = pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="var(--accent)"></circle>`).join('');
+  svg.innerHTML = `<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>${dots}`;
+}
+
+/* ================= KARAKTERLER ================= */
+let pendingImage = null;
+let pendingRelations = [];
+function switchKarTab(tab){
+  document.querySelectorAll('[data-ktab]').forEach(b=>b.classList.toggle('active', b.dataset.ktab===tab));
+  document.getElementById('character-grid').style.display = tab==='list'?'grid':'none';
+  document.getElementById('character-relmap').style.display = tab==='map'?'block':'none';
+  if(tab==='map') renderRelMap();
+}
+function renderCharacters(){
+  const grid = document.getElementById('character-grid');
+  if(!state.characters.length){
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">Henüz karakter eklenmedi.<br><button class="btn" onclick="openCharacterModal()">+ Yeni Karakter</button></div>`; return;
+  }
+  grid.innerHTML = state.characters.map(c=>`
+    <div class="card">
+      ${c.image?`<img class="thumb" src="${c.image}">`:`<div class="thumb empty">Görsel yok</div>`}
+      <h3>${esc(c.name||'İsimsiz')}</h3>
+      <div class="desc">${esc(c.physical||'')}</div>
+      <div class="row"><button class="btn small ghost" onclick="openCharacterModal('${c.id}')">Düzenle</button></div>
+    </div>`).join('');
+}
+function renderRelMap(){
+  const el = document.getElementById('character-relmap');
+  const chars = state.characters;
+  if(!chars.length){ el.innerHTML = `<div class="empty-state">Henüz karakter yok.</div>`; return; }
+  const cx=el.clientWidth/2||300, cy=200, r=Math.min(cx,cy)-70;
+  const pos = {};
+  chars.forEach((c,i)=>{ const a=(i/chars.length)*2*Math.PI - Math.PI/2; pos[c.id]=[cx+r*Math.cos(a), cy+r*Math.sin(a)]; });
+  let lines='';
+  chars.forEach(c=>(c.relations||[]).forEach(rel=>{
+    const to = pos[rel.to]; const from = pos[c.id];
+    if(to && from){
+      const mx=(to[0]+from[0])/2, my=(to[1]+from[1])/2;
+      lines += `<line x1="${from[0]}" y1="${from[1]}" x2="${to[0]}" y2="${to[1]}" stroke="var(--line)" stroke-width="1.5"/>`;
+      lines += `<text x="${mx}" y="${my}" font-size="10.5" fill="var(--ink-soft)" text-anchor="middle">${esc(rel.label)}</text>`;
+    }
+  }));
+  const nodes = chars.map(c=>`<div class="relnode" style="left:${pos[c.id][0]}px; top:${pos[c.id][1]}px">
+    ${c.image?`<img src="${c.image}">`:`<div style="width:54px;height:54px;border-radius:50%;background:var(--paper-2);border:2px solid var(--accent-2);margin:0 auto;"></div>`}
+    <div class="nm">${esc(c.name)}</div></div>`).join('');
+  el.innerHTML = `<svg>${lines}</svg>` + nodes;
+}
+function openCharacterModal(id){
+  const c = state.characters.find(x=>x.id===id);
+  document.getElementById('character-id').value = id||'';
+  document.getElementById('character-modal-title').textContent = c ? 'Karakteri Düzenle' : 'Yeni Karakter';
+  document.getElementById('character-name').value = c?.name||'';
+  document.getElementById('character-physical').value = c?.physical||'';
+  document.getElementById('character-personality').value = c?.personality||'';
+  document.getElementById('character-backstory').value = c?.backstory||'';
+  document.getElementById('character-img-preview').src = c?.image||'';
+  document.getElementById('character-img-status').textContent = '';
+  pendingImage = c?.image||null;
+  pendingRelations = JSON.parse(JSON.stringify(c?.relations||[]));
+  const sel = document.getElementById('rel-target');
+  sel.innerHTML = state.characters.filter(x=>x.id!==id).map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('') || '<option value="">Önce başka karakter ekle</option>';
+  renderRelationsEditor();
+  openModal('character-modal');
+}
+function renderRelationsEditor(){
+  document.getElementById('character-relations').innerHTML = pendingRelations.map((r,i)=>{
+    const target = state.characters.find(x=>x.id===r.to);
+    return `<div class="minirow">${esc(target?.name||'?')} — ${esc(r.label)}<span class="x" onclick="removeRelation(${i})">×</span></div>`;
+  }).join('');
+}
+function addRelation(){
+  const to = document.getElementById('rel-target').value;
+  const label = document.getElementById('rel-label').value.trim();
+  if(!to || !label){ toast('Karakter ve etiket seç'); return; }
+  pendingRelations.push({to,label});
+  document.getElementById('rel-label').value='';
+  renderRelationsEditor();
+}
+function removeRelation(i){ pendingRelations.splice(i,1); renderRelationsEditor(); }
+function saveCharacter(){
+  const id = document.getElementById('character-id').value;
+  const name = document.getElementById('character-name').value.trim();
+  if(!name){ toast('Ad gerekli'); return; }
+  let c = state.characters.find(x=>x.id===id);
+  if(!c){ c = { id: uid() }; state.characters.push(c); }
+  c.name = name;
+  c.physical = document.getElementById('character-physical').value.trim();
+  c.personality = document.getElementById('character-personality').value.trim();
+  c.backstory = document.getElementById('character-backstory').value.trim();
+  c.image = pendingImage;
+  c.relations = pendingRelations;
+  save(); renderCharacters(); closeModal('character-modal');
+}
+function deleteCharacter(){
+  const id = document.getElementById('character-id').value;
+  state.characters = state.characters.filter(x=>x.id!==id);
+  state.characters.forEach(c=>{ c.relations = (c.relations||[]).filter(r=>r.to!==id); });
+  save(); renderCharacters(); closeModal('character-modal');
+}
+async function batchGenerateImages(){
+  const key = state.settings.geminiKey;
+  if(!key){ toast('Önce Ayarlar sayfasından Gemini API anahtarını gir'); switchView('ayarlar'); return; }
+  const targets = state.characters.filter(c=>!c.image && c.physical);
+  if(!targets.length){ toast('Görseli olmayan ve fiziksel açıklaması olan karakter yok'); return; }
+  toast(`${targets.length} karakter için görsel oluşturuluyor…`);
+  for(const c of targets){
+    try{
+      const model = state.settings.imageModel || 'gemini-2.5-flash-image';
+      const prompt_ = `Bir roman karakteri için portre illüstrasyonu: ${c.name}. Özellikler: ${c.physical}. Yarı-gerçekçi dijital illüstrasyon stili, nötr arka plan.`;
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,{
+        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ contents:[{ parts:[{text:prompt_}] }] })
+      });
+      const data = await res.json();
+      const imgPart = (data?.candidates?.[0]?.content?.parts||[]).find(p=>p.inlineData);
+      if(imgPart) c.image = `data:${imgPart.inlineData.mimeType};base64,${imgPart.inlineData.data}`;
+    }catch(e){ /* bu karakteri atla, devam et */ }
+  }
+  save(); renderCharacters(); toast('Toplu görsel oluşturma tamamlandı');
+}
+
+/* ================= MEKANLAR ================= */
+function switchLocTab(tab){
+  document.querySelectorAll('[data-ltab]').forEach(b=>b.classList.toggle('active', b.dataset.ltab===tab));
+  document.getElementById('location-grid').style.display = tab==='list'?'grid':'none';
+  document.getElementById('location-mapview').style.display = tab==='map'?'block':'none';
+  if(tab==='map') renderWorldMap();
+}
+function renderLocations(){
+  const grid = document.getElementById('location-grid');
+  if(!state.locations.length){
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">Henüz mekan eklenmedi.<br><button class="btn" onclick="openLocationModal()">+ Yeni Mekan</button></div>`; return;
+  }
+  grid.innerHTML = state.locations.map(l=>`
+    <div class="card">
+      ${l.image?`<img class="thumb" src="${l.image}">`:`<div class="thumb empty">Görsel yok</div>`}
+      <h3>${esc(l.name||'İsimsiz')}</h3>
+      <div class="desc">${esc(l.desc||'')}</div>
+      <div class="meta">${(l.chapterIds||[]).length} bölümde geçiyor</div>
+      <div class="row"><button class="btn small ghost" onclick="openLocationModal('${l.id}')">Düzenle</button></div>
+    </div>`).join('');
+}
+function openLocationModal(id){
+  const l = state.locations.find(x=>x.id===id);
+  document.getElementById('location-id').value = id||'';
+  document.getElementById('location-modal-title').textContent = l ? 'Mekanı Düzenle' : 'Yeni Mekan';
+  document.getElementById('location-name').value = l?.name||'';
+  document.getElementById('location-desc').value = l?.desc||'';
+  document.getElementById('location-img-preview').src = l?.image||'';
+  document.getElementById('location-img-status').textContent = '';
+  pendingImage = l?.image||null;
+  const chapIds = l?.chapterIds||[];
+  document.getElementById('location-chapters').innerHTML = state.chapters.length ? state.chapters.map(c=>`
+    <label style="display:inline-flex;align-items:center;gap:5px;margin:0 10px 6px 0;font-size:12.5px;">
+      <input type="checkbox" class="loc-chap-cb" value="${c.id}" ${chapIds.includes(c.id)?'checked':''}> ${esc(c.title)}
+    </label>`).join('') : '<span class="meta">Henüz bölüm yok</span>';
+  openModal('location-modal');
+}
+function saveLocation(){
+  const id = document.getElementById('location-id').value;
+  const name = document.getElementById('location-name').value.trim();
+  if(!name){ toast('Ad gerekli'); return; }
+  let l = state.locations.find(x=>x.id===id);
+  if(!l){ l = { id: uid() }; state.locations.push(l); }
+  l.name = name;
+  l.desc = document.getElementById('location-desc').value.trim();
+  l.image = pendingImage;
+  l.chapterIds = [...document.querySelectorAll('.loc-chap-cb:checked')].map(cb=>cb.value);
+  save(); renderLocations(); closeModal('location-modal');
+}
+function deleteLocation(){
+  const id = document.getElementById('location-id').value;
+  state.locations = state.locations.filter(x=>x.id!==id);
+  state.worldMap.pins = (state.worldMap.pins||[]).filter(p=>p.locId!==id);
+  save(); renderLocations(); closeModal('location-modal');
+}
+function uploadWorldMap(ev){
+  const file = ev.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{ state.worldMap.image = reader.result; save(); renderWorldMap(); };
+  reader.readAsDataURL(file);
+}
+function renderWorldMap(){
+  const wrap = document.getElementById('mapwrap'); if(!wrap) return;
+  if(!state.worldMap.image){ wrap.innerHTML = `<div class="empty-state" style="border:none;">Önce yukarıdan bir harita görseli yükle.</div>`; return; }
+  const pins = (state.worldMap.pins||[]).map(p=>{
+    const loc = state.locations.find(l=>l.id===p.locId);
+    if(!loc) return '';
+    return `<div class="pin" style="left:${p.x}%; top:${p.y}%" onclick="openLocationModal('${loc.id}')"><div class="dot"></div><div class="lbl">${esc(loc.name)}</div></div>`;
+  }).join('');
+  wrap.innerHTML = `<img class="bg" src="${state.worldMap.image}" onclick="placePinPrompt(event)">${pins}`;
+}
+function placePinPrompt(ev){
+  if(!state.locations.length){ toast('Önce bir mekan oluştur'); return; }
+  const rect = ev.target.getBoundingClientRect();
+  const x = ((ev.clientX-rect.left)/rect.width*100).toFixed(1);
+  const y = ((ev.clientY-rect.top)/rect.height*100).toFixed(1);
+  const names = state.locations.map((l,i)=>`${i+1}. ${l.name}`).join('\n');
+  const pick = prompt('Hangi mekanı buraya pinleyelim?\n'+names+'\n\nNumarasını gir:');
+  const idx = parseInt(pick)-1;
+  if(isNaN(idx) || !state.locations[idx]) return;
+  state.worldMap.pins = (state.worldMap.pins||[]).filter(p=>p.locId!==state.locations[idx].id);
+  state.worldMap.pins.push({locId:state.locations[idx].id, x:parseFloat(x), y:parseFloat(y)});
+  save(); renderWorldMap();
+}
+
+/* ================= SÖZLÜK ================= */
+function renderGlossary(){
+  const body = document.getElementById('glossary-body');
+  if(!state.glossary.length){ body.innerHTML = `<tr><td colspan="3" class="meta" style="padding:16px 10px;">Henüz terim eklenmedi.</td></tr>`; return; }
+  body.innerHTML = state.glossary.map(g=>`
+    <tr><td><input type="text" value="${esc(g.term)}" style="border:none;background:none;font-weight:600;width:100%;" onchange="updateGlossary('${g.id}','term',this.value)"></td>
+    <td><input type="text" value="${esc(g.def)}" style="border:none;background:none;width:100%;" onchange="updateGlossary('${g.id}','def',this.value)"></td>
+    <td><span class="x" style="cursor:pointer;color:var(--warn);font-weight:700;" onclick="removeGlossary('${g.id}')">×</span></td></tr>`).join('');
+}
+function addGlossary(){ state.glossary.push({id:uid(),term:'Yeni terim',def:''}); save(); renderGlossary(); }
+function updateGlossary(id,field,val){ const g=state.glossary.find(x=>x.id===id); if(g){ g[field]=val; save(); } }
+function removeGlossary(id){ state.glossary = state.glossary.filter(x=>x.id!==id); save(); renderGlossary(); }
+
+/* ================= YAZAR GÜNLÜĞÜ ================= */
+function renderJournal(){
+  const el = document.getElementById('journal-list');
+  if(!state.journal.length){ el.innerHTML = `<div class="empty-state">Henüz bir fikir eklemedin.</div>`; return; }
+  el.innerHTML = state.journal.slice().reverse().map(j=>`
+    <div class="journal-entry"><div class="d">${new Date(j.ts).toLocaleString('tr-TR')} <span style="cursor:pointer;color:var(--warn);float:right;" onclick="removeJournal('${j.id}')">Sil</span></div>
+    <div class="t">${esc(j.text)}</div></div>`).join('');
+}
+function addJournal(){
+  const t = document.getElementById('journal-input').value.trim();
+  if(!t) return;
+  state.journal.push({id:uid(), ts:Date.now(), text:t});
+  document.getElementById('journal-input').value='';
+  save(); renderJournal();
+}
+function removeJournal(id){ state.journal = state.journal.filter(j=>j.id!==id); save(); renderJournal(); }
+
+/* ================= ARAMA ================= */
+function doSearch(){
+  const q = document.getElementById('search-input').value.trim().toLowerCase();
+  const el = document.getElementById('search-results');
+  if(!q){ el.innerHTML=''; return; }
+  const hits = [];
+  state.chapters.forEach((c,i)=>{
+    const text = chapterText(c);
+    if((c.title||'').toLowerCase().includes(q) || (c.summary||'').toLowerCase().includes(q) || text.toLowerCase().includes(q)){
+      const idx = text.toLowerCase().indexOf(q);
+      const snippet = idx>=0 ? '…'+text.slice(Math.max(0,idx-40), idx+60)+'…' : (c.summary||'');
+      hits.push({kind:'Bölüm '+(i+1), title:c.title, snippet, action:()=>writeChapter(c.id)});
+    }
+    (c.notes||[]).forEach(n=>{ if(n.text.toLowerCase().includes(q)) hits.push({kind:'Not · '+c.title, title:n.text, snippet:'', action:()=>writeChapter(c.id)}); });
+  });
+  state.characters.forEach(c=>{
+    const blob = [c.name,c.physical,c.personality,c.backstory].join(' ').toLowerCase();
+    if(blob.includes(q)) hits.push({kind:'Karakter', title:c.name, snippet:c.physical||'', action:()=>{switchView('karakterler'); openCharacterModal(c.id);}});
+  });
+  state.locations.forEach(l=>{
+    const blob = [l.name,l.desc].join(' ').toLowerCase();
+    if(blob.includes(q)) hits.push({kind:'Mekan', title:l.name, snippet:l.desc||'', action:()=>{switchView('mekanlar'); openLocationModal(l.id);}});
+  });
+  state.glossary.forEach(g=>{
+    if((g.term+' '+g.def).toLowerCase().includes(q)) hits.push({kind:'Sözlük', title:g.term, snippet:g.def, action:()=>switchView('sozluk')});
+  });
+  window._searchHits = hits;
+  el.innerHTML = hits.length ? hits.map((h,i)=>`
+    <div class="search-result" onclick="window._searchHits[${i}].action()">
+      <div class="k">${esc(h.kind)}</div><div class="t">${esc(h.title)}</div>
+      ${h.snippet?`<div class="s">${esc(h.snippet)}</div>`:''}
+    </div>`).join('') : `<div class="empty-state">Sonuç bulunamadı.</div>`;
+}
+
+/* ================= OKUMA MODU / YAZDIRMA / DIŞA AKTARMA ================= */
+function renderBook(){
+  const el = document.getElementById('book-page');
+  el.className = 'book-page view print-target';
+  el.id = 'book-page';
+  if(!state.chapters.length){ el.innerHTML = `<div class="empty-state">Henüz yazılmış bir şey yok.</div>`; return; }
+  el.innerHTML = state.chapters.map((c,i)=>`<h2>Bölüm ${i+1}<br>${esc(c.title)}</h2><p>${esc(chapterText(c)||'(henüz yazılmadı)')}</p>`).join('');
+}
+function printBook(){ renderBook(); document.getElementById('view-okuma').classList.add('print-target'); window.print(); }
+async function saveTextFile(filename, text, mime){
+  if(claudeDownloads){
+    try{ await claudeDownloads.save({filename, data:text}); toast('İndiriliyor…'); return; }catch(e){}
+  }
+  try{
+    const blob = new Blob([text], {type: mime||'text/plain'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 2000);
+  }catch(e){ toast('İndirme başarısız: '+e.message); }
+}
+function exportWord(){
+  let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+  <head><meta charset="utf-8"><title>Roman</title></head><body style="font-family:Georgia,serif; font-size:14pt; line-height:1.7;">`;
+  state.chapters.forEach((c,i)=>{
+    html += `<h1 style="text-align:center; page-break-before:always;">Bölüm ${i+1}<br>${esc(c.title)}</h1>`;
+    html += `<p>${esc(chapterText(c)||'').replace(/\n/g,'</p><p>')}</p>`;
+  });
+  html += `</body></html>`;
+  saveTextFile('roman.doc', html, 'application/msword');
+}
+function exportBackup(){
+  saveTextFile('roman-atolyesi-yedek-'+todayKey()+'.json', JSON.stringify(state, null, 2), 'application/json');
+}
+function importBackup(ev){
+  const file = ev.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const parsed = JSON.parse(reader.result);
+      if(!confirm('Mevcut tüm veri, yedekteki veriyle değiştirilecek. Emin misin?')) return;
+      state = migrate(parsed); save();
+      renderChapters(); renderCharacters(); renderLocations(); renderGlossary(); renderJournal(); renderChat(); loadSettingsForm(); loadThemeForm(); applyTheme();
+      toast('Yedek geri yüklendi ✓');
+    }catch(e){ toast('Geçersiz yedek dosyası'); }
+  };
+  reader.readAsText(file);
+}
+
+/* ================= İSTATİSTİKLER ================= */
+function renderStats(){
+  document.getElementById('book-goal-input').value = state.progress.bookGoal || '';
+  const total = totalWords();
+  const days = Object.keys(state.progress.history).length || 1;
+  const totalHistory = Object.values(state.progress.history).reduce((a,b)=>a+b,0) + Math.max(0,total-state.progress.dayStart);
+  const avg = Math.round(totalHistory / (days));
+  document.getElementById('stat-cards').innerHTML = `
+    <div class="stat-card"><div class="n">${total}</div><div class="l">Toplam Kelime</div></div>
+    <div class="stat-card"><div class="n">${state.chapters.length}</div><div class="l">Bölüm</div></div>
+    <div class="stat-card"><div class="n">${avg}</div><div class="l">Günlük Ortalama</div></div>
+    <div class="stat-card"><div class="n">${computeStreak()}</div><div class="l">Gün Serisi</div></div>
+  `;
+  const wc = document.getElementById('weekchart');
+  const days7 = []; for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); days7.push(d.toISOString().slice(0,10)); }
+  const vals = days7.map(k=> k===todayKey() ? Math.max(0,total-state.progress.dayStart) : (state.progress.history[k]||0));
+  const max = Math.max(...vals, state.progress.goal, 1);
+  wc.innerHTML = days7.map((k,i)=>`<div class="bar-wrap"><div class="bar" style="height:${Math.max(2,vals[i]/max*100)}%"></div><div class="lbl">${k.slice(5)}</div></div>`).join('');
+  const est = document.getElementById('finish-estimate');
+  if(state.progress.bookGoal && avg>0){
+    const remaining = Math.max(0, state.progress.bookGoal - total);
+    const daysLeft = Math.ceil(remaining/avg);
+    est.innerHTML = remaining<=0 ? '<b>Hedefine ulaştın! 🎉</b>' : `Bu hızla (günde ort. ${avg} kelime) kalan <b>${remaining} kelimeyi</b> yaklaşık <b>${daysLeft} günde</b> bitirebilirsin.`;
+  } else {
+    est.textContent = 'Tahmin görmek için yukarıdan bir kitap hedefi belirle.';
+  }
+}
+function setBookGoal(){ state.progress.bookGoal = parseInt(document.getElementById('book-goal-input').value)||0; save(); renderStats(); }
+
+/* ---------- Görsel yükleme / oluşturma ---------- */
+function handleImageUpload(ev, previewId){
+  const file = ev.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{ pendingImage = reader.result; document.getElementById(previewId).src = pendingImage; };
+  reader.readAsDataURL(file);
+}
+async function generateImage(kind){
+  const key = state.settings.geminiKey;
+  if(!key){ toast('Önce Ayarlar sayfasından Gemini API anahtarını gir'); switchView('ayarlar'); return; }
+  const statusEl = document.getElementById(kind+'-img-status');
+  let prompt_;
+  if(kind==='character'){
+    const name = document.getElementById('character-name').value.trim();
+    const physical = document.getElementById('character-physical').value.trim();
+    if(!physical){ toast('Önce fiziksel özellikleri yaz'); return; }
+    prompt_ = `Bir roman karakteri için portre illüstrasyonu: ${name}. Özellikler: ${physical}. Yarı-gerçekçi dijital illüstrasyon stili, nötr arka plan.`;
+  } else {
+    const name = document.getElementById('location-name').value.trim();
+    const desc = document.getElementById('location-desc').value.trim();
+    if(!desc){ toast('Önce mekan açıklamasını yaz'); return; }
+    prompt_ = `Bir roman mekanı için manzara illüstrasyonu: ${name}. Açıklama: ${desc}. Atmosferik dijital illüstrasyon stili.`;
+  }
+  statusEl.textContent = 'Oluşturuluyor…';
+  try{
+    const model = state.settings.imageModel || 'gemini-2.5-flash-image';
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ contents:[{ parts:[{text:prompt_}] }] })
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data?.error?.message || 'İstek başarısız');
+    const parts = data?.candidates?.[0]?.content?.parts || [];
+    const imgPart = parts.find(p=>p.inlineData);
+    if(!imgPart) throw new Error('Görsel üretilemedi (model metin döndürdü)');
+    const dataUrl = `data:${imgPart.inlineData.mimeType};base64,${imgPart.inlineData.data}`;
+    pendingImage = dataUrl;
+    document.getElementById(kind+'-img-preview').src = dataUrl;
+    statusEl.textContent = 'Hazır ✓';
+  }catch(err){ statusEl.textContent=''; toast('Görsel hatası: ' + err.message); }
+}
+
+/* ================= YAZIM MODU ================= */
+let activeSceneId = null;
+function refreshChapterSelect(){
+  const sel = document.getElementById('write-chapter-select');
+  const current = sel.value;
+  sel.innerHTML = state.chapters.map((c,i)=>`<option value="${c.id}">Bölüm ${i+1} — ${esc(c.title)}</option>`).join('') || '<option value="">Önce bir bölüm oluştur</option>';
+  if(current && state.chapters.find(c=>c.id===current)) sel.value = current;
+  loadChapterIntoEditor();
+}
+function loadChapterIntoEditor(){
+  const id = document.getElementById('write-chapter-select').value;
+  const c = state.chapters.find(x=>x.id===id);
+  document.getElementById('readability-box').style.display='none';
+  renderSceneBar(c);
+  loadEditorText(c);
+  document.getElementById('chap-goal-input').value = c?.wordGoal || '';
+  updateChapGoalBar(c);
+  renderNotes(c);
+  renderVersions(c);
+}
+function renderSceneBar(c){
+  const bar = document.getElementById('scene-bar');
+  if(!c || !(c.scenes||[]).length){ bar.innerHTML=''; activeSceneId=null; return; }
+  activeSceneId = c.scenes[0].id;
+  bar.innerHTML = c.scenes.map(s=>`<span class="scene-chip ${s.id===activeSceneId?'active':''}" data-scene="${s.id}" onclick="switchScene('${s.id}')">${esc(s.title)}</span>`).join('')
+    + `<span class="scene-chip" onclick="switchScene(null)">${activeSceneId===null?'●':'○'} Tüm Bölüm</span>`;
+}
+function switchScene(sceneId){
+  saveCurrentEditorText();
+  activeSceneId = sceneId;
+  const id = document.getElementById('write-chapter-select').value;
+  const c = state.chapters.find(x=>x.id===id);
+  document.querySelectorAll('.scene-chip').forEach(el=>el.classList.toggle('active', el.dataset.scene===sceneId));
+  loadEditorText(c);
+}
+function loadEditorText(c){
+  const ed = document.getElementById('editor');
+  if(!c){ ed.value=''; ed.disabled=true; updateWriteStats(); return; }
+  ed.disabled = false;
+  if(activeSceneId){
+    const scene = (c.scenes||[]).find(s=>s.id===activeSceneId);
+    ed.value = scene ? scene.text||'' : '';
+  } else {
+    ed.value = c.content||'';
+  }
+  updateWriteStats();
+}
+function saveCurrentEditorText(){
+  const id = document.getElementById('write-chapter-select').value;
+  const c = state.chapters.find(x=>x.id===id);
+  if(!c) return;
+  const val = document.getElementById('editor').value;
+  if(activeSceneId){
+    const scene = (c.scenes||[]).find(s=>s.id===activeSceneId);
+    if(scene) scene.text = val;
+  } else {
+    c.content = val;
+  }
+}
+let saveTimer;
+function onEditorInput(){
+  updateWriteStats();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{
+    saveCurrentEditorText();
+    save(); renderChapters();
+    const id = document.getElementById('write-chapter-select').value;
+    updateChapGoalBar(state.chapters.find(x=>x.id===id));
+  }, 500);
+}
+function updateWriteStats(){ document.getElementById('write-stats').textContent = wordCount(document.getElementById('editor').value) + ' kelime'; }
+function updateChapGoalBar(c){
+  const fill = document.getElementById('chap-goal-fill');
+  if(!c || !c.wordGoal){ fill.style.width='0%'; return; }
+  fill.style.width = Math.min(100, Math.round(chapterWordCount(c)/c.wordGoal*100))+'%';
+}
+function setChapGoal(){
+  const id = document.getElementById('write-chapter-select').value;
+  const c = state.chapters.find(x=>x.id===id); if(!c) return;
+  c.wordGoal = parseInt(document.getElementById('chap-goal-input').value)||0;
+  save(); updateChapGoalBar(c); renderChapters();
+}
+function toggleZen(){ document.body.classList.toggle('zen'); }
+
+function renderNotes(c){
+  const el = document.getElementById('write-notes');
+  if(!c){ el.innerHTML=''; return; }
+  el.innerHTML = (c.notes||[]).map(n=>`<div class="note-item">${esc(n.text)}<span class="x" onclick="removeNote('${n.id}')">×</span></div>`).join('') || `<div class="meta">Not yok</div>`;
+}
+function addNote(){
+  const id = document.getElementById('write-chapter-select').value;
+  const c = state.chapters.find(x=>x.id===id);
+  if(!c){ toast('Önce bir bölüm seç'); return; }
+  const text = document.getElementById('note-input').value.trim();
+  if(!text) return;
+  c.notes = c.notes||[]; c.notes.push({id:uid(), text});
+  document.getElementById('note-input').value=''; save(); renderNotes(c); renderChapters();
+}
+function removeNote(nid){
+  const id = document.getElementById('write-chapter-select').value;
+  const c = state.chapters.find(x=>x.id===id); if(!c) return;
+  c.notes = (c.notes||[]).filter(n=>n.id!==nid); save(); renderNotes(c); renderChapters();
+}
+function renderVersions(c){
+  const el = document.getElementById('write-versions');
+  if(!c || !(c.versions||[]).length){ el.innerHTML = 'Henüz sürüm kaydedilmedi'; return; }
+  el.innerHTML = c.versions.slice().reverse().map(v=>{
+    const d = new Date(v.ts);
+    return `<div class="minirow">${d.toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}<span style="margin-left:auto;cursor:pointer;color:var(--accent-ink);font-weight:600;" onclick="restoreVersion('${v.ts}')">Geri Yükle</span></div>`;
+  }).join('');
+}
+function saveVersionSnapshot(){
+  const id = document.getElementById('write-chapter-select').value;
+  const c = state.chapters.find(x=>x.id===id);
+  if(!c){ toast('Önce bir bölüm seç'); return; }
+  saveCurrentEditorText();
+  c.versions = c.versions||[]; c.versions.push({ts:Date.now(), content:c.content||'', scenes:JSON.parse(JSON.stringify(c.scenes||[]))});
+  if(c.versions.length>20) c.versions.shift();
+  save(); renderVersions(c); toast('Sürüm kaydedildi');
+}
+function restoreVersion(ts){
+  const id = document.getElementById('write-chapter-select').value;
+  const c = state.chapters.find(x=>x.id===id); if(!c) return;
+  const v = (c.versions||[]).find(x=>String(x.ts)===String(ts)); if(!v) return;
+  if(!confirm('Bu sürüme geri dönülsün mü? Şu anki metin kaybolacak (önce yeni bir sürüm kaydedebilirsin).')) return;
+  c.content = v.content; if(v.scenes) c.scenes = v.scenes;
+  renderSceneBar(c); loadEditorText(c);
+  save(); renderChapters();
+}
+async function improveSelection(){
+  const key = state.settings.geminiKey;
+  if(!key){ toast('Önce Ayarlar sayfasından Gemini API anahtarını gir'); switchView('ayarlar'); return; }
+  const ed = document.getElementById('editor');
+  const selected = ed.value.slice(ed.selectionStart, ed.selectionEnd);
+  if(!selected.trim()){ toast('Önce geliştirmek istediğin metni seç'); return; }
+  toast('Geliştiriliyor…');
+  try{
+    const improved = await callGemini(`Aşağıdaki roman parçasını, aynı anlamı ve olay örgüsünü koruyarak daha akıcı, canlı ve edebi hale getir. Sadece geliştirilmiş metni döndür, başka açıklama ekleme:\n\n${selected}`);
+    ed.setRangeText(improved.trim(), ed.selectionStart, ed.selectionEnd, 'select');
+    onEditorInput();
+    toast('Metin geliştirildi ✓');
+  }catch(err){ toast('Hata: ' + err.message); }
+}
+async function checkReadability(){
+  const key = state.settings.geminiKey;
+  if(!key){ toast('Önce Ayarlar sayfasından Gemini API anahtarını gir'); switchView('ayarlar'); return; }
+  const text = document.getElementById('editor').value;
+  if(!text.trim()){ toast('Önce bir şeyler yaz'); return; }
+  toast('İnceleniyor…');
+  try{
+    const result = await callGemini(`Aşağıdaki roman parçasını dilbilgisi, akıcılık ve okunabilirlik açısından incele. Tekrar eden kelimeler, çok uzun cümleler veya belirsiz ifadeler varsa belirt. Kısa, madde madde geri bildirim ver (en fazla 5 madde):\n\n${text}`);
+    document.getElementById('readability-box').style.display='block';
+    document.getElementById('readability-text').textContent = result;
+  }catch(err){ toast('Hata: ' + err.message); }
+}
+function toggleDictation(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ toast('Bu tarayıcı sesli not özelliğini desteklemiyor (Chrome önerilir)'); return; }
+  const btn = document.getElementById('mic-btn');
+  if(window._recognition && window._recognizing){
+    window._recognition.stop(); window._recognizing=false; btn.textContent='🎤 Sesli Not'; return;
+  }
+  const rec = new SR();
+  rec.lang = 'tr-TR'; rec.continuous = true; rec.interimResults = false;
+  rec.onresult = (e)=>{
+    let text = '';
+    for(let i=e.resultIndex;i<e.results.length;i++){ if(e.results[i].isFinal) text += e.results[i][0].transcript + ' '; }
+    if(text){
+      const ed = document.getElementById('editor');
+      ed.value = ed.value + (ed.value && !ed.value.endsWith('\n') ? '\n' : '') + text;
+      onEditorInput();
+    }
+  };
+  rec.onerror = ()=>{ window._recognizing=false; btn.textContent='🎤 Sesli Not'; };
+  rec.onend = ()=>{ if(window._recognizing){ rec.start(); } else { btn.textContent='🎤 Sesli Not'; } };
+  window._recognition = rec; window._recognizing = true;
+  btn.textContent = '⏺️ Dinleniyor… (durdur)';
+  rec.start();
+}
+
+/* ================= AI ASİSTAN ================= */
+function renderChat(){
+  const log = document.getElementById('chat-log');
+  if(!state.chat.length){ log.innerHTML = `<div class="msg sys">Romanın hakkında soru sor — karakterler, mekanlar ve tüm bölümler bağlam olarak gönderilir.</div>`; return; }
+  log.innerHTML = state.chat.map(m=>`<div class="msg ${m.role}">${esc(m.text)}</div>`).join('');
+  log.scrollTop = log.scrollHeight;
+}
+function buildContext(){
+  let ctx = 'Sen bir romanın yazarına yardımcı olan bir asistansın. Aşağıda romanın tüm materyali var:\n\n';
+  ctx += '## KARAKTERLER\n';
+  state.characters.forEach(c=>{ ctx += `- ${c.name}: fiziksel: ${c.physical||'-'}; kişilik: ${c.personality||'-'}; geçmiş: ${c.backstory||'-'}\n`; });
+  ctx += '\n## MEKANLAR\n';
+  state.locations.forEach(l=>{ ctx += `- ${l.name}: ${l.desc||'-'}\n`; });
+  ctx += '\n## SÖZLÜK\n';
+  state.glossary.forEach(g=>{ ctx += `- ${g.term}: ${g.def}\n`; });
+  ctx += '\n## BÖLÜMLER\n';
+  state.chapters.forEach((c,i)=>{ ctx += `\n### Bölüm ${i+1}: ${c.title}\nÖzet: ${c.summary||'-'}\nMetin:\n${(chapterText(c)||'(henüz yazılmadı)').slice(0,6000)}\n`; });
+  return ctx;
+}
+async function callGemini(prompt_){
+  const key = state.settings.geminiKey;
+  const model = state.settings.textModel || 'gemini-2.5-flash';
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ contents:[{ parts:[{text: prompt_}] }] })
+  });
+  const data = await res.json();
+  if(!res.ok) throw new Error(data?.error?.message || 'İstek başarısız');
+  return data?.candidates?.[0]?.content?.parts?.map(p=>p.text).join('') || '(cevap alınamadı)';
+}
+async function askQuick(kind){
+  const key = state.settings.geminiKey;
+  if(!key){ toast('Önce Ayarlar sayfasından Gemini API anahtarını gir'); switchView('ayarlar'); return; }
+  const prompts = {
+    tutarlilik: 'Yukarıdaki tüm bölümleri, karakterleri ve mekanları incele. Karakter tutarsızlıkları (fiziksel özellik, isim, zaman çizelgesi çelişkileri) var mı? Varsa madde madde listele, yoksa bunu belirt.',
+    ozet: 'Yukarıdaki roman materyaline dayanarak romanın şu ana kadarki akışını 4-5 cümleyle özetle.',
+    oneri: 'Yukarıdaki roman materyaline dayanarak, son bölümden sonra gelebilecek sıradaki bölüm için 3 farklı olay örgüsü önerisi sun.'
+  };
+  state.chat.push({role:'user', text:'['+({tutarlilik:'Tutarlılık Kontrolü',ozet:'Romanı Özetle',oneri:'Bölüm Önerisi'})[kind]+']'});
+  renderChat();
+  state.chat.push({role:'sys', text:'Düşünüyor…'}); renderChat();
+  try{
+    const answer = await callGemini(buildContext() + '\n\nGÖREV: ' + prompts[kind]);
+    state.chat.pop(); state.chat.push({role:'ai', text:answer});
+  }catch(err){ state.chat.pop(); state.chat.push({role:'sys', text:'Hata: '+err.message}); }
+  renderChat(); save();
+}
+async function sendChat(ev){
+  ev.preventDefault();
+  const input = document.getElementById('chat-input');
+  const question = input.value.trim();
+  if(!question) return;
+  const key = state.settings.geminiKey;
+  if(!key){ toast('Önce Ayarlar sayfasından Gemini API anahtarını gir'); switchView('ayarlar'); return; }
+  state.chat.push({role:'user', text:question});
+  input.value=''; renderChat(); save();
+  state.chat.push({role:'sys', text:'Düşünüyor…'}); renderChat();
+  try{
+    const context = buildContext();
+    const history = state.chat.filter(m=>m.role!=='sys').slice(-10).map(m=>`${m.role==='user'?'Yazar':'Asistan'}: ${m.text}`).join('\n');
+    const answer = await callGemini(`${context}\n\n## KONUŞMA\n${history}\n\nSon soruya kısa, somut ve romana özel şekilde cevap ver.`);
+    state.chat.pop(); state.chat.push({role:'ai', text:answer});
+  }catch(err){ state.chat.pop(); state.chat.push({role:'sys', text:'Hata: '+err.message}); }
+  renderChat(); save();
+}
+
+/* ================= AYARLAR ================= */
+function loadSettingsForm(){
+  document.getElementById('gemini-key').value = state.settings.geminiKey||'';
+  document.getElementById('gemini-text-model').value = state.settings.textModel||'gemini-2.5-flash';
+  document.getElementById('gemini-image-model').value = state.settings.imageModel||'gemini-2.5-flash-image';
+}
+function saveSettings(){
+  state.settings.geminiKey = document.getElementById('gemini-key').value.trim();
+  state.settings.textModel = document.getElementById('gemini-text-model').value.trim();
+  state.settings.imageModel = document.getElementById('gemini-image-model').value.trim();
+  save(); toast('Ayarlar kaydedildi');
+}
+async function testConnection(){
+  saveSettings();
+  const key = state.settings.geminiKey;
+  if(!key){ toast('Önce bir API anahtarı gir'); return; }
+  toast('Test ediliyor…');
+  try{ await callGemini('Merhaba de.'); toast('Bağlantı başarılı ✓'); }
+  catch(err){ toast('Bağlantı hatası: ' + err.message); }
+}
+function loadThemeForm(){
+  document.getElementById('theme-font').value = state.settings.theme.font || 'Fraunces';
+  renderPaletteSwatches();
+}
+function renderPaletteSwatches(){
+  const el = document.getElementById('palette-swatches');
+  const current = state.settings.theme.preset || 'amber';
+  el.innerHTML = Object.entries(PALETTES).map(([key,p])=>`
+    <div onclick="selectPreset('${key}')" style="cursor:pointer; text-align:center; width:74px;">
+      <div style="width:54px; height:54px; border-radius:50%; margin:0 auto 6px; border:3px solid ${current===key?p.accent:'transparent'}; box-shadow:0 0 0 1px var(--line); background:linear-gradient(135deg, ${p.paper} 50%, ${p.accent} 50%);"></div>
+      <div style="font-size:11px; color:var(--ink-soft); font-weight:${current===key?'700':'500'};">${esc(p.name)}</div>
+    </div>`).join('');
+}
+function selectPreset(key){
+  state.settings.theme.preset = key;
+  save(); applyTheme(); renderPaletteSwatches();
+}
+function onFontChange(){
+  state.settings.theme.font = document.getElementById('theme-font').value;
+  save(); applyTheme();
+}
+function applyTheme(){
+  const p = PALETTES[state.settings.theme.preset || 'amber'] || PALETTES.amber;
+  const font = state.settings.theme.font || 'Fraunces';
+  const root = document.documentElement.style;
+  root.setProperty('--paper', p.paper); root.setProperty('--paper-2', p.paper2); root.setProperty('--card', p.card);
+  root.setProperty('--ink', p.ink); root.setProperty('--ink-soft', p.inkSoft); root.setProperty('--line', p.line);
+  root.setProperty('--accent', p.accent); root.setProperty('--accent-2', p.accent2);
+  root.setProperty('--accent-soft', p.accentSoft); root.setProperty('--accent-ink', p.accentInk);
+  root.setProperty('--ink-dk', p.inkDk); root.setProperty('--ink-dk-2', p.inkDk2); root.setProperty('--oak', p.oak);
+  root.setProperty('--ok', p.ok); root.setProperty('--warn', p.warn); root.setProperty('--cream', p.paper);
+  root.setProperty('--heading-font', "'"+font+"',serif");
+}
+
+/* ---------- Başlangıç ---------- */
+renderChapters(); renderCharacters(); renderLocations(); renderChat(); loadSettingsForm();
+loadThemeForm(); applyTheme();
+</script>
+</body>
+</html>
