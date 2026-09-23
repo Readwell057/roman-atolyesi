@@ -1,0 +1,10 @@
+{
+  "appId": "com.romanatolyesi.app",
+  "appName": "Roman Atölyesi",
+  "webDir": "docs",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://KULLANICI-ADIN.github.io/roman-atolyesi/",
+    "cleartext": true
+  }
+}
